@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>香谱搜索系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; 
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); 
+            min-height: 100vh; 
+            padding: 12px; 
+            color: #333; 
+            line-height: 1.5;
+        }
+        .container { max-width: 600px; margin: 0 auto; }
+        
+        /* Header */
+        header { text-align: center; color: white; margin-bottom: 20px; }
+        header h1 { font-size: 1.5em; font-weight: 600; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); margin-bottom: 8px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .header-user { display: flex; align-items: center; gap: 10px; }
+        .header-user span { color: #ffd700; font-size: 13px; }
+        .header-user button { 
+            padding: 6px 12px; 
+            border: none; 
+            border-radius: 15px; 
+            cursor: pointer; 
+            font-size: 12px; 
+            font-weight: 500; 
+            transition: all 0.2s;
+        }
+        .btn-logout { 
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%); 
+            color: white; 
+        }
+        .btn-manage { 
+            background: linear-gradient(135deg, #4ecdc4 0%, #3dbdb5 100%); 
+            color: white; 
+            display: none;
+        }
+        .header-subtitle { font-size: 12px; opacity: 0.85; color: rgba(255,255,255,0.85); }
+        
+        /* Stats Panel */
+        .stats-panel { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; 
+            margin-bottom: 20px; 
+        }
+        .stat-card { 
+            background: rgba(255,255,255,0.1); 
+            backdrop-filter: blur(10px); 
+            border-radius: 12px; 
+            padding: 15px 8px; 
+            text-align: center; 
+            color: white; 
+            transition: all 0.2s;
+        }
+        .stat-card .number { 
+            font-size: 1.5em; 
+            font-weight: bold; 
+            background: linear-gradient(135deg, #ffd700 0%, #ff6b6b 100%); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+        .stat-card .label { font-size: 11px; opacity: 0.8; margin-top: 4px; }
+        
+        /* Search Box */
+        .search-box { 
+            background: white; 
+            border-radius: 16px; 
+            padding: 20px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25); 
+            margin-bottom: 20px;
+        }
+        .search-box h3 { 
+            font-size: 1.1em; 
+            color: #333; 
+            margin-bottom: 16px; 
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        /* Search Grid - Two rows, two columns */
+        .search-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 12px; 
+        }
+        
+        .candle-group { 
+            background: #f8f9fa; 
+            border-radius: 12px; 
+            padding: 14px; 
+            border: 1.5px solid #e9ecef;
+            transition: all 0.2s;
+        }
+        .candle-group:hover {
+            border-color: #667eea;
+            background: #fff;
+        }
+        
+        .candle-title { 
+            font-weight: 600; 
+            color: #333; 
+            font-size: 13px;
+            margin-bottom: 10px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+        }
+        .candle-title .dot { 
+            width: 12px; 
+            height: 12px; 
+            border-radius: 50%; 
+        }
+        .dot-category { background: #ff6b6b; }
+        .dot-left { background: #ff6b6b; }
+        .dot-middle { background: #4ecdc4; }
+        .dot-right { background: #ffe66d; }
+        
+        .search-item select { 
+            width: 100%; 
+            padding: 10px 12px; 
+            border: 1.5px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 13px; 
+            background: white; 
+            cursor: pointer; 
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+        .search-item select:focus { 
+            outline: none; 
+            border-color: #667eea; 
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        /* Action Bar */
+        .action-bar { 
+            display: flex; 
+            gap: 12px; 
+            margin-top: 18px; 
+        }
+        .btn { 
+            flex: 1;
+            padding: 12px; 
+            border-radius: 10px; 
+            font-size: 15px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            border: none; 
+            transition: all 0.2s;
+        }
+        .btn-search { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+        }
+        .btn-search:active { 
+            transform: scale(0.98); 
+        }
+        .btn-reset { 
+            background: #f0f0f0; 
+            color: #666; 
+        }
+        .btn-reset:active { 
+            background: #e0e0e0; 
+        }
+        
+        /* Results Box */
+        .results-box { 
+            background: white; 
+            border-radius: 16px; 
+            padding: 20px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25); 
+        }
+        .results-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 16px; 
+            padding-bottom: 12px; 
+            border-bottom: 1px solid #eee; 
+        }
+        .results-header h2 { font-size: 1.1em; color: #333; }
+        .results-count { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            padding: 6px 16px; 
+            border-radius: 20px; 
+            font-size: 13px; 
+            font-weight: 600; 
+        }
+        
+        /* Incense Grid */
+        .incense-grid { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 16px; 
+        }
+        .incense-card { 
+            background: #fafafa; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); 
+            border: 1px solid #e8e8e8; 
+            transition: all 0.2s;
+        }
+        .incense-card:active { 
+            transform: scale(0.99); 
+        }
+        .incense-image { 
+            height: 140px; 
+            background: #f5f5f5; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            position: relative; 
+        }
+        .incense-image img { 
+            max-width: 100%; 
+            max-height: 100%; 
+            object-fit: contain; 
+        }
+        .incense-image .placeholder { 
+            color: #ccc; 
+            font-size: 2.5em; 
+            opacity: 0.5; 
+        }
+        .incense-image .category-badge { 
+            position: absolute; 
+            top: 8px; 
+            right: 8px; 
+            background: rgba(255,255,255,0.95); 
+            padding: 4px 10px; 
+            border-radius: 12px; 
+            font-size: 11px; 
+            color: #667eea; 
+            font-weight: 600; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .incense-content { padding: 14px; }
+        .incense-name { 
+            font-size: 1.15em; 
+            font-weight: 600; 
+            color: #333; 
+            margin-bottom: 8px; 
+        }
+        .incense-style { 
+            background: #fff3e0; 
+            padding: 10px; 
+            border-radius: 8px; 
+            font-size: 12px; 
+            color: #e65100; 
+            margin-bottom: 10px; 
+            border-left: 3px solid #ff9800;
+        }
+        .incense-poem { 
+            background: #f3e5f5; 
+            padding: 10px; 
+            border-radius: 8px; 
+            font-size: 12px; 
+            color: #6a1b9a; 
+            line-height: 1.6; 
+            white-space: pre-line; 
+            font-style: italic;
+        }
+        
+        /* No Results */
+        .no-results { text-align: center; padding: 60px 20px; color: #999; }
+        .no-results .icon { font-size: 4em; margin-bottom: 16px; opacity: 0.5; }
+        .no-results p { font-size: 14px; }
+        
+        /* Loading */
+        .loading { text-align: center; color: rgba(255,255,255,0.7); padding: 40px; }
+        
+        /* Tablet and Desktop */
+        @media (min-width: 600px) {
+            body { padding: 20px; }
+            header h1 { font-size: 1.8em; }
+            .header-user button { padding: 8px 16px; font-size: 13px; }
+            .stat-card { padding: 20px 12px; }
+            .stat-card .number { font-size: 1.8em; }
+            .stat-card .label { font-size: 12px; }
+            .search-box { padding: 24px; }
+            .search-grid { gap: 16px; }
+            .candle-group { padding: 18px; }
+            .candle-title { font-size: 14px; }
+            .search-item select { padding: 12px 14px; font-size: 14px; }
+            .btn { padding: 14px; font-size: 16px; }
+            .results-box { padding: 24px; }
+            .incense-grid { grid-template-columns: repeat(2, 1fr); }
+            .incense-image { height: 150px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <h1>🏮 燃香样式判断</h1>
+                <div class="header-user">
+                    <span>欢迎, <span id="currentUser">用户</span></span>
+                    <button id="userManageBtn" onclick="openUserManage()" class="btn-manage">用户管理</button>
+                    <button onclick="logout()" class="btn-logout">退出</button>
+                </div>
+            </div>
+            <p class="header-subtitle">根据三炷香的样式说明进行智能搜索</p>
+        </header>
+        
+        <div class="stats-panel">
+            <div class="stat-card"><div class="number" id="statTotal">0</div><div class="label">香谱总数</div></div>
+            <div class="stat-card"><div class="number" id="statCategories">13</div><div class="label">大类数量</div></div>
+            <div class="stat-card"><div class="number" id="statImages">440</div><div class="label">图片数量</div></div>
+        </div>
+        
+        <div class="search-box">
+            <h3>搜索条件</h3>
+            <div class="search-grid">
+                <div class="candle-group">
+                    <div class="candle-title"><span class="dot dot-category"></span><span>三炷香高度（高低平）</span></div>
+                    <div class="search-item">
+                        <select id="category">
+                            <option value="">不限</option>
+                            <option value="平齐式">平齐式</option>
+                            <option value="左斜切式">左斜切式</option>
+                            <option value="左平齐式">左平齐式</option>
+                            <option value="右平齐式">右平齐式</option>
+                            <option value="右低式">右低式</option>
+                            <option value="中高式">中高式</option>
+                            <option value="中低左参差">中低左参差</option>
+                            <option value="中高左参差">中高左参差</option>
+                            <option value="中高右参差">中高右参差</option>
+                            <option value="中低右参差">中低右参差</option>
+                            <option value="中低式">中低式</option>
+                            <option value="左低式">左低式</option>
+                            <option value="右斜切式">右斜切式</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="candle-group">
+                    <div class="candle-title"><span class="dot dot-left"></span><span>左炷香灰</span></div>
+                    <div class="search-item">
+                        <select id="leftAsh">
+                            <option value="">不限</option>
+                            <option value="直立">直立</option>
+                            <option value="左弯">左弯</option>
+                            <option value="右弯">右弯</option>
+                            <option value="内弯">内弯</option>
+                            <option value="外弯">外弯</option>
+                            <option value="搭桥">搭桥</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="candle-group">
+                    <div class="candle-title"><span class="dot dot-middle"></span><span>中炷香灰</span></div>
+                    <div class="search-item">
+                        <select id="middleAsh">
+                            <option value="">不限</option>
+                            <option value="直立">直立</option>
+                            <option value="左弯">左弯</option>
+                            <option value="右弯">右弯</option>
+                            <option value="内弯">内弯</option>
+                            <option value="外弯">外弯</option>
+                            <option value="搭桥">搭桥</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="candle-group">
+                    <div class="candle-title"><span class="dot dot-right"></span><span>右炷香灰</span></div>
+                    <div class="search-item">
+                        <select id="rightAsh">
+                            <option value="">不限</option>
+                            <option value="直立">直立</option>
+                            <option value="左弯">左弯</option>
+                            <option value="右弯">右弯</option>
+                            <option value="内弯">内弯</option>
+                            <option value="外弯">外弯</option>
+                            <option value="搭桥">搭桥</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-bar">
+                <button class="btn btn-search" onclick="searchIncense()">开始搜索</button>
+                <button class="btn btn-reset" onclick="resetSearch()">重置筛选</button>
+            </div>
+        </div>
+        
+        <div class="results-box">
+            <div class="results-header"><h2>搜索结果</h2><span class="results-count" id="resultsCount">共 0 种</span></div>
+            <div id="resultsContainer" class="loading">加载中...</div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!sessionStorage.getItem('loggedIn')) {
+                window.location.href = '香谱样式查看.html';
+                return;
+            }
+            
+            var username = sessionStorage.getItem('username');
+            document.getElementById('currentUser').textContent = username;
+            
+            var isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+            if (isAdmin) {
+                document.getElementById('userManageBtn').style.display = 'inline-block';
+            }
+            
+            document.getElementById('statTotal').textContent = incenseData.length;
+            var container = document.getElementById('resultsContainer');
+            container.innerHTML = '<div class="no-results"><div class="icon">🔍</div><p>请选择搜索条件后点击开始搜索</p></div>';
+            document.getElementById('resultsCount').textContent = '共 0 种';
+        });
+
+        function logout() {
+            sessionStorage.removeItem('loggedIn');
+            sessionStorage.removeItem('username');
+            sessionStorage.removeItem('isAdmin');
+            window.location.href = '香谱样式查看.html';
+        }
+
+        function searchIncense() {
+            var category = document.getElementById('category').value;
+            var leftAsh = document.getElementById('leftAsh').value;
+            var middleAsh = document.getElementById('middleAsh').value;
+            var rightAsh = document.getElementById('rightAsh').value;
+            
+            var results = incenseData.slice();
+            
+            if (category) {
+                results = results.filter(function(item) { return item.category === category; });
+            }
+            if (leftAsh) {
+                results = results.filter(function(item) { return item.features.left_candle.ash === leftAsh; });
+            }
+            if (middleAsh) {
+                results = results.filter(function(item) { return item.features.middle_candle.ash === middleAsh; });
+            }
+            if (rightAsh) {
+                results = results.filter(function(item) { return item.features.right_candle.ash === rightAsh; });
+            }
+            
+            displayResults(results);
+        }
+
+        function displayResults(results) {
+            var container = document.getElementById('resultsContainer');
+            var count = document.getElementById('resultsCount');
+            
+            count.textContent = '共 ' + results.length + ' 种';
+            
+            if (results.length === 0) {
+                container.innerHTML = '<div class="no-results"><div class="icon">🔍</div><p>未找到符合条件的香谱</p></div>';
+                return;
+            }
+            
+            container.innerHTML = results.map(function(item) {
+                return '<div class="incense-card"><div class="incense-image"><img src="' + item.image_path + '" alt="' + item.name + '" onerror="handleImageError(this)"><span class="category-badge">' + item.category + '</span></div><div class="incense-content"><div class="incense-name">' + item.name + '</div><div class="incense-style">' + item.style_description + '</div><div class="incense-poem">' + item.meaning_poem + '</div></div></div>';
+            }).join('');
+        }
+
+        function resetSearch() {
+            document.getElementById('category').value = '';
+            document.getElementById('leftAsh').value = '';
+            document.getElementById('middleAsh').value = '';
+            document.getElementById('rightAsh').value = '';
+            var container = document.getElementById('resultsContainer');
+            container.innerHTML = '<div class="no-results"><div class="icon">🔍</div><p>请选择搜索条件后点击开始搜索</p></div>';
+            document.getElementById('resultsCount').textContent = '共 0 种';
+        }
+
+        function handleImageError(img) {
+            img.style.display = 'none';
+            img.parentElement.innerHTML = '<span class="placeholder">🖼️</span>';
+        }
+
+        function openUserManage() {
+            window.open('admin.html', '_blank', 'width=800,height=600');
+        }
+    </script>
+</body>
+</html>
