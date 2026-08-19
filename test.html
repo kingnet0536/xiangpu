@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片加载测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .test-section { margin: 20px 0; padding: 20px; background: white; border-radius: 8px; }
+        h2 { color: #333; }
+        .img-test { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+        .img-test div { text-align: center; }
+        .img-test img { max-width: 150px; max-height: 150px; border: 2px solid #ddd; border-radius: 4px; }
+        .img-test .label { margin-top: 8px; font-size: 12px; color: #666; word-break: break-all; max-width: 200px; }
+        .green-box { width: 100px; height: 100px; background: #4CAF50; border-radius: 4px; }
+        .error { color: red; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🔍 图片加载诊断页面</h1>
+    
+    <div class="test-section">
+        <h2>测试1: 直接使用原始路径</h2>
+        <div class="img-test">
+            <div>
+                <img src="images/平齐式/1.png" alt="原始路径">
+                <div class="label">images/平齐式/1.png</div>
+            </div>
+            <div>
+                <img src="images/平齐式/2.png" alt="原始路径2">
+                <div class="label">images/平齐式/2.png</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>测试2: 使用 encodeURI 编码后的路径</h2>
+        <div class="img-test" id="encodedTest">
+            <!-- 由 JS 填充 -->
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>测试3: 检查当前页面信息</h2>
+        <div id="pageInfo"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>测试4: 检查 data.js 数据</h2>
+        <div id="dataInfo"></div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="users.js"></script>
+    <script>
+        // 测试2: 编码路径
+        var encodedContainer = document.getElementById('encodedTest');
+        var testPaths = [
+            'images/平齐式/1.png',
+            'images/平齐式/2.png'
+        ];
+        testPaths.forEach(function(p) {
+            var encoded = encodeURI(p);
+            var div = document.createElement('div');
+            div.innerHTML = '<img src="' + encoded + '" alt="编码路径"><div class="label">' + encoded + '</div>';
+            encodedContainer.appendChild(div);
+        });
+
+        // 测试3: 页面信息
+        document.getElementById('pageInfo').innerHTML = 
+            '<p><strong>当前URL:</strong> ' + window.location.href + '</p>' +
+            '<p><strong>origin:</strong> ' + window.location.origin + '</p>' +
+            '<p><strong>hostname:</strong> ' + window.location.hostname + '</p>' +
+            '<p><strong>pathname:</strong> ' + window.location.pathname + '</p>';
+
+        // 测试4: 检查数据
+        if (typeof incenseData !== 'undefined') {
+            var firstItem = incenseData[0];
+            document.getElementById('dataInfo').innerHTML = 
+                '<p>✅ data.js 加载成功，共 ' + incenseData.length + ' 条记录</p>' +
+                '<p>第一条记录:</p>' +
+                '<pre>' + JSON.stringify(firstItem, null, 2) + '</pre>';
+        } else {
+            document.getElementById('dataInfo').innerHTML = 
+                '<p class="error">❌ data.js 未加载！</p>';
+        }
+    </script>
+</body>
+</html>
